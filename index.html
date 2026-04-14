@@ -4,23 +4,83 @@
     <meta charset="UTF-8">
     <title>マイ名簿アプリ</title>
     <style>
+        /* --- 既存のスタイル --- */
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
         .container { max-width: 900px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
         h2 { color: #333; text-align: center; }
         .input-group { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-start; }
         input, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         input { flex: 1; min-width: 100px; }
-        /* 備考欄を複数行打てるように調整 */
         textarea { flex: 2; min-width: 200px; height: 38px; resize: vertical; }
         button#submit-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; height: 40px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
         th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { background-color: #f8f9fa; }
-        /* 操作ボタンのスタイル */
         .btn-group { display: flex; gap: 5px; }
         .detail-btn { color: #17a2b8; cursor: pointer; border: 1px solid #17a2b8; background: none; border-radius: 3px; padding: 2px 5px; font-size: 0.8em; }
         .edit-btn { color: #007bff; cursor: pointer; border: none; background: none; font-weight: bold; }
         .delete-btn { color: #dc3545; cursor: pointer; border: none; background: none; font-weight: bold; }
+
+        /* --- 🌟 モーダル（詳細画面）のスタイル --- */
+        .modal-overlay {
+            display: none; /* 初期状態は隠しておく */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* 半透明の黒い背景 */
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 8% auto; /* 画面の上から少し下げて中央寄せ */
+            padding: 20px 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 700px; /* 広すぎないように制限 */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        /* 上部のレイアウト（ID, 名前, 場所, 操作） */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .modal-info-item {
+            flex: 1; /* 等間隔に並べる */
+        }
+        .modal-info-item strong {
+            display: block;
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .modal-info-item span {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        /* 下部のレイアウト（備考） */
+        .modal-body {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            min-height: 150px;
+            white-space: pre-wrap; /* 改行をそのまま表示する魔法のCSS */
+            line-height: 1.6;
+        }
+        .close-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -52,6 +112,33 @@
         </thead>
         <tbody id="user-list"></tbody>
     </table>
+</div>
+
+<div id="detail-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-info-item">
+                <strong>ID</strong>
+                <span id="modal-id"></span>
+            </div>
+            <div class="modal-info-item">
+                <strong>名前</strong>
+                <span id="modal-name"></span>
+            </div>
+            <div class="modal-info-item">
+                <strong>入所場所</strong>
+                <span id="modal-place"></span>
+            </div>
+            <div class="modal-info-item" style="text-align: right;">
+                <strong>操作</strong><br>
+                <button class="close-btn" onclick="closeModal()">閉じる</button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <strong style="color:#555; display:block; margin-bottom:10px;">備考詳細</strong>
+            <div id="modal-info-text"></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -97,12 +184,10 @@
     function addUserToTable(user) {
         const tr = document.createElement('tr');
         
-        // --- 🌟 詳細ボタンが必要かどうかの判定ロジック ---
-        // 改行が含まれているか、または30文字以上なら「長い」と判定
         const isLong = user.info.includes('\n') || user.info.length > 30;
         
-        // 詳細ボタンのHTML（長い場合のみ表示）
-        const detailBtnHtml = isLong ? `<button class="detail-btn" onclick="alert('【備考詳細】\\n${user.info.replace(/\n/g, '\\n')}')">詳細</button>` : '';
+        // 🌟 アラートではなく、showModal() を呼び出すように変更
+        const detailBtnHtml = isLong ? `<button class="detail-btn" onclick="showModal('${user.id}')">詳細</button>` : '';
 
         tr.innerHTML = `
             <td>${user.id}</td>
@@ -159,6 +244,39 @@
         userList.innerHTML = '';
         filtered.forEach(addUserToTable);
     });
+
+    // ==========================================
+    // 🌟 モーダル（詳細画面）を操作する関数群
+    // ==========================================
+
+    // モーダルを開いてデータをセットする
+    function showModal(id) {
+        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        let user = users.find(u => u.id === id); // クリックされた人のデータを探す
+        if (!user) return;
+
+        // HTMLの各場所にデータを埋め込む
+        document.getElementById('modal-id').textContent = user.id;
+        document.getElementById('modal-name').textContent = user.name;
+        document.getElementById('modal-place').textContent = user.place;
+        document.getElementById('modal-info-text').textContent = user.info;
+
+        // モーダルのCSSを「表示」に切り替える
+        document.getElementById('detail-modal').style.display = 'block';
+    }
+
+    // モーダルを閉じる
+    function closeModal() {
+        document.getElementById('detail-modal').style.display = 'none';
+    }
+
+    // おまけ機能：黒い背景部分をクリックしても閉じるようにする
+    window.onclick = function(event) {
+        const modal = document.getElementById('detail-modal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
 </script>
 
 </body>
