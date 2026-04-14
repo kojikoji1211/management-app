@@ -4,15 +4,22 @@
     <meta charset="UTF-8">
     <title>マイ名簿アプリ</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 900px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
         h2 { color: #333; text-align: center; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button#add-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; }
+        .input-group { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-start; }
+        input, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        input { flex: 1; min-width: 100px; }
+        /* 備考欄を複数行打てるように調整 */
+        textarea { flex: 2; min-width: 200px; height: 38px; resize: vertical; }
+        button#submit-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; height: 40px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+        th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { background-color: #f8f9fa; }
+        /* 操作ボタンのスタイル */
+        .btn-group { display: flex; gap: 5px; }
+        .detail-btn { color: #17a2b8; cursor: pointer; border: 1px solid #17a2b8; background: none; border-radius: 3px; padding: 2px 5px; font-size: 0.8em; }
+        .edit-btn { color: #007bff; cursor: pointer; border: none; background: none; font-weight: bold; }
         .delete-btn { color: #dc3545; cursor: pointer; border: none; background: none; font-weight: bold; }
     </style>
 </head>
@@ -22,70 +29,136 @@
     <h2>👤 ユーザー管理システム</h2>
     
     <div class="input-group">
+        <input type="text" id="userId" placeholder="ID">
         <input type="text" id="name" placeholder="名前">
-        <input type="text" id="info" placeholder="備考（例：2年生、Python学習中）">
-        <button id="add-btn">追加</button>
+        <input type="text" id="place" placeholder="入所場所">
+        <textarea id="info" placeholder="備考（複数行可）"></textarea>
+        <button id="submit-btn">追加</button>
+    </div>
+
+    <div style="margin-bottom: 10px;">
+        <input type="text" id="search" placeholder="🔍 全項目から検索...">
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>名前</th>
-                <th>備考</th>
-                <th>操作</th>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 20%;">名前</th>
+                <th style="width: 20%;">入所場所</th>
+                <th style="width: 30%;">備考</th>
+                <th style="width: 20%;">操作</th>
             </tr>
         </thead>
-        <tbody id="user-list">
-            </tbody>
+        <tbody id="user-list"></tbody>
     </table>
 </div>
 
 <script>
+    const idInput = document.getElementById('userId');
     const nameInput = document.getElementById('name');
+    const placeInput = document.getElementById('place');
     const infoInput = document.getElementById('info');
-    const addBtn = document.getElementById('add-btn');
+    const submitBtn = document.getElementById('submit-btn');
     const userList = document.getElementById('user-list');
+    const searchInput = document.getElementById('search');
 
-    // 1. ページ読み込み時に保存データを表示
+    let isEditing = false;
+    let editingId = null;
+
     document.addEventListener('DOMContentLoaded', displayUsers);
 
-    // 2. 追加ボタンの処理
-    addBtn.addEventListener('click', () => {
-        const user = { name: nameInput.value, info: infoInput.value };
-        if (!user.name) return alert('名前を入力してください');
+    submitBtn.addEventListener('click', () => {
+        const user = { 
+            id: idInput.value, 
+            name: nameInput.value, 
+            place: placeInput.value, 
+            info: infoInput.value 
+        };
+        if (!user.id || !user.name) return alert('IDと名前は必須です');
 
-        saveUser(user);
-        addUserToTable(user);
-        nameInput.value = '';
-        infoInput.value = '';
+        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        if (isEditing) {
+            users = users.map(u => u.id === editingId ? user : u);
+            isEditing = false;
+            editingId = null;
+            submitBtn.textContent = '追加';
+            submitBtn.style.background = '#28a745';
+        } else {
+            if (users.some(u => u.id === user.id)) return alert('IDが重複しています');
+            users.push(user);
+        }
+
+        localStorage.setItem('myUsers', JSON.stringify(users));
+        [idInput, nameInput, placeInput, infoInput].forEach(el => el.value = '');
+        displayUsers();
     });
 
-    // データを表示する関数
     function addUserToTable(user) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${user.name}</td><td>${user.info}</td><td><button class="delete-btn" onclick="deleteUser('${user.name}', this)">削除</button></td>`;
+        
+        // --- 🌟 詳細ボタンが必要かどうかの判定ロジック ---
+        // 改行が含まれているか、または30文字以上なら「長い」と判定
+        const isLong = user.info.includes('\n') || user.info.length > 30;
+        
+        // 詳細ボタンのHTML（長い場合のみ表示）
+        const detailBtnHtml = isLong ? `<button class="detail-btn" onclick="alert('【備考詳細】\\n${user.info.replace(/\n/g, '\\n')}')">詳細</button>` : '';
+
+        tr.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.name}</td>
+            <td>${user.place}</td>
+            <td title="${user.info}">${user.info}</td>
+            <td>
+                <div class="btn-group">
+                    ${detailBtnHtml}
+                    <button class="edit-btn" onclick="editUser('${user.id}')">編集</button>
+                    <button class="delete-btn" onclick="deleteUser('${user.id}')">削除</button>
+                </div>
+            </td>
+        `;
         userList.appendChild(tr);
     }
 
-    // データを保存する関数 (LocalStorage)
-    function saveUser(user) {
-        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        users.push(user);
-        localStorage.setItem('myUsers', JSON.stringify(users));
-    }
-
     function displayUsers() {
+        userList.innerHTML = ''; 
         let users = JSON.parse(localStorage.getItem('myUsers')) || [];
         users.forEach(addUserToTable);
     }
 
-    // データを削除する関数
-    function deleteUser(name, btn) {
+    function deleteUser(id) {
+        if(!confirm('削除しますか？')) return;
         let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        users = users.filter(u => u.name !== name);
+        users = users.filter(u => u.id !== id);
         localStorage.setItem('myUsers', JSON.stringify(users));
-        btn.parentElement.parentElement.remove();
+        displayUsers();
     }
+
+    function editUser(id) {
+        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        let user = users.find(u => u.id === id);
+        if (!user) return;
+
+        idInput.value = user.id;
+        nameInput.value = user.name;
+        placeInput.value = user.place;
+        infoInput.value = user.info;
+
+        isEditing = true;
+        editingId = id;
+        submitBtn.textContent = '更新';
+        submitBtn.style.background = '#007bff';
+    }
+
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase(); 
+        const users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        const filtered = users.filter(u => 
+            Object.values(u).some(val => val.toLowerCase().includes(query))
+        );
+        userList.innerHTML = '';
+        filtered.forEach(addUserToTable);
+    });
 </script>
 
 </body>
