@@ -2,10 +2,91 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ユーザー管理アプリ</title>
+    <title>マイ名簿アプリ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
+        h2 { color: #333; text-align: center; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button#add-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .delete-btn { color: #dc3545; cursor: pointer; border: none; background: none; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h1>ユーザー管理アプリ</h1>
-    <p>ここに中身を作っていきます。</p>
+
+<div class="container">
+    <h2>👤 ユーザー管理システム</h2>
+    
+    <div class="input-group">
+        <input type="text" id="name" placeholder="名前">
+        <input type="text" id="info" placeholder="備考（例：2年生、Python学習中）">
+        <button id="add-btn">追加</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>名前</th>
+                <th>備考</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="user-list">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const nameInput = document.getElementById('name');
+    const infoInput = document.getElementById('info');
+    const addBtn = document.getElementById('add-btn');
+    const userList = document.getElementById('user-list');
+
+    // 1. ページ読み込み時に保存データを表示
+    document.addEventListener('DOMContentLoaded', displayUsers);
+
+    // 2. 追加ボタンの処理
+    addBtn.addEventListener('click', () => {
+        const user = { name: nameInput.value, info: infoInput.value };
+        if (!user.name) return alert('名前を入力してください');
+
+        saveUser(user);
+        addUserToTable(user);
+        nameInput.value = '';
+        infoInput.value = '';
+    });
+
+    // データを表示する関数
+    function addUserToTable(user) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${user.name}</td><td>${user.info}</td><td><button class="delete-btn" onclick="deleteUser('${user.name}', this)">削除</button></td>`;
+        userList.appendChild(tr);
+    }
+
+    // データを保存する関数 (LocalStorage)
+    function saveUser(user) {
+        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        users.push(user);
+        localStorage.setItem('myUsers', JSON.stringify(users));
+    }
+
+    function displayUsers() {
+        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        users.forEach(addUserToTable);
+    }
+
+    // データを削除する関数
+    function deleteUser(name, btn) {
+        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        users = users.filter(u => u.name !== name);
+        localStorage.setItem('myUsers', JSON.stringify(users));
+        btn.parentElement.parentElement.remove();
+    }
+</script>
+
 </body>
 </html>
