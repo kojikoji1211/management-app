@@ -4,83 +4,40 @@
     <meta charset="UTF-8">
     <title>マイ名簿アプリ</title>
     <style>
-        /* --- 既存のスタイル --- */
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
         .container { max-width: 900px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
         h2 { color: #333; text-align: center; }
-        .input-group { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-start; }
-        input, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        input { flex: 1; min-width: 100px; }
-        textarea { flex: 2; min-width: 200px; height: 38px; resize: vertical; }
-        button#submit-btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; height: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+        
+        /* 上部の操作エリアをシンプルに（新規登録ボタンと検索窓のみ） */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; }
+        .search-box { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .add-main-btn { background: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { background-color: #f8f9fa; }
-        .btn-group { display: flex; gap: 5px; }
-        .detail-btn { color: #17a2b8; cursor: pointer; border: 1px solid #17a2b8; background: none; border-radius: 3px; padding: 2px 5px; font-size: 0.8em; }
-        .edit-btn { color: #007bff; cursor: pointer; border: none; background: none; font-weight: bold; }
+        
+        .btn-group { display: flex; gap: 8px; }
+        .detail-btn { background: #17a2b8; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
         .delete-btn { color: #dc3545; cursor: pointer; border: none; background: none; font-weight: bold; }
 
-        /* --- 🌟 モーダル（詳細画面）のスタイル --- */
-        .modal-overlay {
-            display: none; /* 初期状態は隠しておく */
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* 半透明の黒い背景 */
-        }
-        .modal-content {
-            background-color: #fff;
-            margin: 8% auto; /* 画面の上から少し下げて中央寄せ */
-            padding: 20px 30px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 700px; /* 広すぎないように制限 */
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-        /* 上部のレイアウト（ID, 名前, 場所, 操作） */
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-        .modal-info-item {
-            flex: 1; /* 等間隔に並べる */
-        }
-        .modal-info-item strong {
-            display: block;
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        .modal-info-item span {
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-        /* 下部のレイアウト（備考） */
-        .modal-body {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 4px;
-            min-height: 150px;
-            white-space: pre-wrap; /* 改行をそのまま表示する魔法のCSS */
-            line-height: 1.6;
-        }
-        .close-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        /* モーダルスタイル */
+        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 700px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        
+        /* モーダル内の入力レイアウト */
+        .modal-header-grid { display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 15px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; }
+        .input-unit { display: flex; flex-direction: column; gap: 5px; }
+        .input-unit label { font-size: 0.85em; color: #666; font-weight: bold; }
+        .input-unit input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        
+        .modal-body { margin-bottom: 20px; }
+        .modal-body label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        .modal-body textarea { width: 100%; height: 200px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-size: 1em; }
+        
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+        .save-btn { background: #007bff; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .cancel-btn { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -88,195 +45,173 @@
 <div class="container">
     <h2>👤 ユーザー管理システム</h2>
     
-    <div class="input-group">
-        <input type="text" id="userId" placeholder="ID">
-        <input type="text" id="name" placeholder="名前">
-        <input type="text" id="place" placeholder="入所場所">
-        <textarea id="info" placeholder="備考（複数行可）"></textarea>
-        <button id="submit-btn">追加</button>
-    </div>
-
-    <div style="margin-bottom: 10px;">
-        <input type="text" id="search" placeholder="🔍 全項目から検索...">
+    <div class="top-bar">
+        <button class="add-main-btn" onclick="openModalForAdd()">＋ 新規ユーザー登録</button>
+        <input type="text" id="search" class="search-box" placeholder="🔍 名前や場所で検索...">
     </div>
 
     <table>
         <thead>
             <tr>
                 <th style="width: 10%;">ID</th>
-                <th style="width: 20%;">名前</th>
-                <th style="width: 20%;">入所場所</th>
-                <th style="width: 30%;">備考</th>
-                <th style="width: 20%;">操作</th>
+                <th style="width: 25%;">名前</th>
+                <th style="width: 25%;">入所場所</th>
+                <th style="width: 25%;">備考</th>
+                <th style="width: 15%;">操作</th>
             </tr>
         </thead>
         <tbody id="user-list"></tbody>
     </table>
 </div>
 
-<div id="detail-modal" class="modal-overlay">
+<div id="user-modal" class="modal-overlay">
     <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-info-item">
-                <strong>ID</strong>
-                <span id="modal-id"></span>
+        <h3 id="modal-title" style="margin-top: 0;">詳細情報</h3>
+        
+        <div class="modal-header-grid">
+            <div class="input-unit">
+                <label>ID</label>
+                <input type="text" id="m-userId" placeholder="001">
             </div>
-            <div class="modal-info-item">
-                <strong>名前</strong>
-                <span id="modal-name"></span>
+            <div class="input-unit">
+                <label>名前</label>
+                <input type="text" id="m-userName" placeholder="氏名">
             </div>
-            <div class="modal-info-item">
-                <strong>入所場所</strong>
-                <span id="modal-place"></span>
-            </div>
-            <div class="modal-info-item" style="text-align: right;">
-                <strong>操作</strong><br>
-                <button class="close-btn" onclick="closeModal()">閉じる</button>
+            <div class="input-unit">
+                <label>入所場所</label>
+                <input type="text" id="m-userPlace" placeholder="場所">
             </div>
         </div>
+
         <div class="modal-body">
-            <strong style="color:#555; display:block; margin-bottom:10px;">備考詳細</strong>
-            <div id="modal-info-text"></div>
+            <label>備考内容</label>
+            <textarea id="m-userInfo" placeholder="詳細な備考を入力してください"></textarea>
+        </div>
+
+        <div class="modal-footer">
+            <button class="cancel-btn" onclick="closeModal()">キャンセル</button>
+            <button id="modal-save-btn" class="save-btn">保存する</button>
         </div>
     </div>
 </div>
 
 <script>
-    const idInput = document.getElementById('userId');
-    const nameInput = document.getElementById('name');
-    const placeInput = document.getElementById('place');
-    const infoInput = document.getElementById('info');
-    const submitBtn = document.getElementById('submit-btn');
     const userList = document.getElementById('user-list');
     const searchInput = document.getElementById('search');
+    
+    // モーダル内の各入力要素
+    const mId = document.getElementById('m-userId');
+    const mName = document.getElementById('m-userName');
+    const mPlace = document.getElementById('m-userPlace');
+    const mInfo = document.getElementById('m-userInfo');
+    const mSaveBtn = document.getElementById('modal-save-btn');
+    const modalTitle = document.getElementById('modal-title');
 
-    let isEditing = false;
-    let editingId = null;
+    let currentEditingId = null; // 編集中のIDを保持
 
     document.addEventListener('DOMContentLoaded', displayUsers);
 
-    submitBtn.addEventListener('click', () => {
-        const user = { 
-            id: idInput.value, 
-            name: nameInput.value, 
-            place: placeInput.value, 
-            info: infoInput.value 
-        };
-        if (!user.id || !user.name) return alert('IDと名前は必須です');
+    // 一覧表示
+    function displayUsers() {
+        userList.innerHTML = '';
+        const users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        users.forEach(user => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.name}</td>
+                <td>${user.place}</td>
+                <td>${user.info}</td>
+                <td>
+                    <div class="btn-group">
+                        <button class="detail-btn" onclick="openModalForEdit('${user.id}')">詳細</button>
+                        <button class="delete-btn" onclick="deleteUser('${user.id}')">削除</button>
+                    </div>
+                </td>
+            `;
+            userList.appendChild(tr);
+        });
+    }
+
+    // --- モーダル制御 ---
+
+    // 新規登録ボタンから開く
+    function openModalForAdd() {
+        currentEditingId = null;
+        modalTitle.textContent = "新規ユーザー登録";
+        mId.disabled = false; // 新規ならID入力可
+        [mId, mName, mPlace, mInfo].forEach(el => el.value = '');
+        document.getElementById('user-modal').style.display = 'block';
+    }
+
+    // 詳細ボタンから開く（編集モード）
+    function openModalForEdit(id) {
+        const users = JSON.parse(localStorage.getItem('myUsers')) || [];
+        const user = users.find(u => u.id === id);
+        if (!user) return;
+
+        currentEditingId = id;
+        modalTitle.textContent = "ユーザー情報の編集";
+        mId.value = user.id;
+        mId.disabled = true; // 編集時はID変更不可（主キー保護）
+        mName.value = user.name;
+        mPlace.value = user.place;
+        mInfo.value = user.info;
+
+        document.getElementById('user-modal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('user-modal').style.display = 'none';
+    }
+
+    // 保存処理（新規・更新の両方対応）
+    mSaveBtn.addEventListener('click', () => {
+        const user = { id: mId.value, name: mName.value, place: mPlace.value, info: mInfo.value };
+        if (!user.id || !user.name) return alert('IDと名前は入力してください');
 
         let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        if (isEditing) {
-            users = users.map(u => u.id === editingId ? user : u);
-            isEditing = false;
-            editingId = null;
-            submitBtn.textContent = '追加';
-            submitBtn.style.background = '#28a745';
+
+        if (currentEditingId) {
+            // 更新
+            users = users.map(u => u.id === currentEditingId ? user : u);
         } else {
-            if (users.some(u => u.id === user.id)) return alert('IDが重複しています');
+            // 新規
+            if (users.some(u => u.id === user.id)) return alert('そのIDは既に存在します');
             users.push(user);
         }
 
         localStorage.setItem('myUsers', JSON.stringify(users));
-        [idInput, nameInput, placeInput, infoInput].forEach(el => el.value = '');
+        closeModal();
         displayUsers();
     });
 
-    function addUserToTable(user) {
-        const tr = document.createElement('tr');
-        
-        const isLong = user.info.includes('\n') || user.info.length > 30;
-        
-        // 🌟 アラートではなく、showModal() を呼び出すように変更
-        const detailBtnHtml = isLong ? `<button class="detail-btn" onclick="showModal('${user.id}')">詳細</button>` : '';
-
-        tr.innerHTML = `
-            <td>${user.id}</td>
-            <td>${user.name}</td>
-            <td>${user.place}</td>
-            <td title="${user.info}">${user.info}</td>
-            <td>
-                <div class="btn-group">
-                    ${detailBtnHtml}
-                    <button class="edit-btn" onclick="editUser('${user.id}')">編集</button>
-                    <button class="delete-btn" onclick="deleteUser('${user.id}')">削除</button>
-                </div>
-            </td>
-        `;
-        userList.appendChild(tr);
-    }
-
-    function displayUsers() {
-        userList.innerHTML = ''; 
-        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        users.forEach(addUserToTable);
-    }
-
+    // 削除
     function deleteUser(id) {
-        if(!confirm('削除しますか？')) return;
+        if(!confirm('本当に削除しますか？')) return;
         let users = JSON.parse(localStorage.getItem('myUsers')) || [];
         users = users.filter(u => u.id !== id);
         localStorage.setItem('myUsers', JSON.stringify(users));
         displayUsers();
     }
 
-    function editUser(id) {
-        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        let user = users.find(u => u.id === id);
-        if (!user) return;
-
-        idInput.value = user.id;
-        nameInput.value = user.name;
-        placeInput.value = user.place;
-        infoInput.value = user.info;
-
-        isEditing = true;
-        editingId = id;
-        submitBtn.textContent = '更新';
-        submitBtn.style.background = '#007bff';
-    }
-
+    // 検索
     searchInput.addEventListener('input', () => {
-        const query = searchInput.value.toLowerCase(); 
+        const query = searchInput.value.toLowerCase();
         const users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        const filtered = users.filter(u => 
-            Object.values(u).some(val => val.toLowerCase().includes(query))
-        );
         userList.innerHTML = '';
-        filtered.forEach(addUserToTable);
+        users.filter(u => Object.values(u).some(v => v.toLowerCase().includes(query)))
+             .forEach(user => {
+                 const tr = document.createElement('tr');
+                 tr.innerHTML = `<td>${user.id}</td><td>${user.name}</td><td>${user.place}</td><td>${user.info}</td>
+                                 <td><div class="btn-group"><button class="detail-btn" onclick="openModalForEdit('${user.id}')">詳細</button>
+                                 <button class="delete-btn" onclick="deleteUser('${user.id}')">削除</button></div></td>`;
+                 userList.appendChild(tr);
+             });
     });
 
-    // ==========================================
-    // 🌟 モーダル（詳細画面）を操作する関数群
-    // ==========================================
-
-    // モーダルを開いてデータをセットする
-    function showModal(id) {
-        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        let user = users.find(u => u.id === id); // クリックされた人のデータを探す
-        if (!user) return;
-
-        // HTMLの各場所にデータを埋め込む
-        document.getElementById('modal-id').textContent = user.id;
-        document.getElementById('modal-name').textContent = user.name;
-        document.getElementById('modal-place').textContent = user.place;
-        document.getElementById('modal-info-text').textContent = user.info;
-
-        // モーダルのCSSを「表示」に切り替える
-        document.getElementById('detail-modal').style.display = 'block';
-    }
-
-    // モーダルを閉じる
-    function closeModal() {
-        document.getElementById('detail-modal').style.display = 'none';
-    }
-
-    // おまけ機能：黒い背景部分をクリックしても閉じるようにする
-    window.onclick = function(event) {
-        const modal = document.getElementById('detail-modal');
-        if (event.target == modal) {
-            closeModal();
-        }
-    }
+    // 背景クリックで閉じる
+    window.onclick = (e) => { if(e.target.className === 'modal-overlay') closeModal(); }
 </script>
 
 </body>

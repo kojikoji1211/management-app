@@ -1,0 +1,95 @@
+/* 全体の設定 */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #eef2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+}
+
+/* ヘッダーと検索バー */
+h2 {
+    margin-top: 0;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.top-bar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.search-box {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid #d1d9e0;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.search-box:focus {
+    border-color: #007bff;
+}
+
+.add-main-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.add-main-btn:hover {
+    background: #0056b3;
+}
+
+/* テーブルのデザイン */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th {
+    background-color: #f8f9fa;
+    padding: 15px;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    color: #666;
+    border-bottom: 2px solid #dee2e6;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+/* 行にマウスを乗せた時の動き */
+tr:hover td {
+    background-color: #fcfcfc;
+}
+
+/* モーダルのリッチな装飾 */
+.modal-content {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
