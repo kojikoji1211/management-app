@@ -3,52 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>マイ名簿アプリ</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 900px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
-        h2 { color: #333; text-align: center; }
-        
-        /* 上部の操作エリアをシンプルに（新規登録ボタンと検索窓のみ） */
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; }
-        .search-box { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .add-main-btn { background: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border-bottom: 1px solid #eee; padding: 12px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        th { background-color: #f8f9fa; }
-        
-        .btn-group { display: flex; gap: 8px; }
-        .detail-btn { background: #17a2b8; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
-        .delete-btn { color: #dc3545; cursor: pointer; border: none; background: none; font-weight: bold; }
-
-        /* モーダルスタイル */
-        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); }
-        .modal-content { background-color: #fff; margin: 5% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 700px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        
-        /* モーダル内の入力レイアウト */
-        .modal-header-grid { display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 15px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; }
-        .input-unit { display: flex; flex-direction: column; gap: 5px; }
-        .input-unit label { font-size: 0.85em; color: #666; font-weight: bold; }
-        .input-unit input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
-        
-        .modal-body { margin-bottom: 20px; }
-        .modal-body label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
-        .modal-body textarea { width: 100%; height: 200px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; font-size: 1em; }
-        
-        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
-        .save-btn { background: #007bff; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .cancel-btn { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
     <h2>👤 ユーザー管理システム</h2>
     
-    <div class="top-bar">
+   <div class="top-bar">
         <button class="add-main-btn" onclick="openModalForAdd()">＋ 新規ユーザー登録</button>
         <input type="text" id="search" class="search-box" placeholder="🔍 名前や場所で検索...">
-    </div>
+        <select id="sort-select" class="sort-box">
+            </select>
+
+        <button onclick="exportData()" style="padding:10px; cursor:pointer;">書き出し</button>
+        <button onclick="document.getElementById('import-file').click()" style="padding:10px; cursor:pointer;">読み込み</button>
+        <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(event)">
+        </div>
 
     <table>
         <thead>
@@ -95,124 +66,6 @@
     </div>
 </div>
 
-<script>
-    const userList = document.getElementById('user-list');
-    const searchInput = document.getElementById('search');
-    
-    // モーダル内の各入力要素
-    const mId = document.getElementById('m-userId');
-    const mName = document.getElementById('m-userName');
-    const mPlace = document.getElementById('m-userPlace');
-    const mInfo = document.getElementById('m-userInfo');
-    const mSaveBtn = document.getElementById('modal-save-btn');
-    const modalTitle = document.getElementById('modal-title');
-
-    let currentEditingId = null; // 編集中のIDを保持
-
-    document.addEventListener('DOMContentLoaded', displayUsers);
-
-    // 一覧表示
-    function displayUsers() {
-        userList.innerHTML = '';
-        const users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        users.forEach(user => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${user.id}</td>
-                <td>${user.name}</td>
-                <td>${user.place}</td>
-                <td>${user.info}</td>
-                <td>
-                    <div class="btn-group">
-                        <button class="detail-btn" onclick="openModalForEdit('${user.id}')">詳細</button>
-                        <button class="delete-btn" onclick="deleteUser('${user.id}')">削除</button>
-                    </div>
-                </td>
-            `;
-            userList.appendChild(tr);
-        });
-    }
-
-    // --- モーダル制御 ---
-
-    // 新規登録ボタンから開く
-    function openModalForAdd() {
-        currentEditingId = null;
-        modalTitle.textContent = "新規ユーザー登録";
-        mId.disabled = false; // 新規ならID入力可
-        [mId, mName, mPlace, mInfo].forEach(el => el.value = '');
-        document.getElementById('user-modal').style.display = 'block';
-    }
-
-    // 詳細ボタンから開く（編集モード）
-    function openModalForEdit(id) {
-        const users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        const user = users.find(u => u.id === id);
-        if (!user) return;
-
-        currentEditingId = id;
-        modalTitle.textContent = "ユーザー情報の編集";
-        mId.value = user.id;
-        mId.disabled = true; // 編集時はID変更不可（主キー保護）
-        mName.value = user.name;
-        mPlace.value = user.place;
-        mInfo.value = user.info;
-
-        document.getElementById('user-modal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('user-modal').style.display = 'none';
-    }
-
-    // 保存処理（新規・更新の両方対応）
-    mSaveBtn.addEventListener('click', () => {
-        const user = { id: mId.value, name: mName.value, place: mPlace.value, info: mInfo.value };
-        if (!user.id || !user.name) return alert('IDと名前は入力してください');
-
-        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-
-        if (currentEditingId) {
-            // 更新
-            users = users.map(u => u.id === currentEditingId ? user : u);
-        } else {
-            // 新規
-            if (users.some(u => u.id === user.id)) return alert('そのIDは既に存在します');
-            users.push(user);
-        }
-
-        localStorage.setItem('myUsers', JSON.stringify(users));
-        closeModal();
-        displayUsers();
-    });
-
-    // 削除
-    function deleteUser(id) {
-        if(!confirm('本当に削除しますか？')) return;
-        let users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        users = users.filter(u => u.id !== id);
-        localStorage.setItem('myUsers', JSON.stringify(users));
-        displayUsers();
-    }
-
-    // 検索
-    searchInput.addEventListener('input', () => {
-        const query = searchInput.value.toLowerCase();
-        const users = JSON.parse(localStorage.getItem('myUsers')) || [];
-        userList.innerHTML = '';
-        users.filter(u => Object.values(u).some(v => v.toLowerCase().includes(query)))
-             .forEach(user => {
-                 const tr = document.createElement('tr');
-                 tr.innerHTML = `<td>${user.id}</td><td>${user.name}</td><td>${user.place}</td><td>${user.info}</td>
-                                 <td><div class="btn-group"><button class="detail-btn" onclick="openModalForEdit('${user.id}')">詳細</button>
-                                 <button class="delete-btn" onclick="deleteUser('${user.id}')">削除</button></div></td>`;
-                 userList.appendChild(tr);
-             });
-    });
-
-    // 背景クリックで閉じる
-    window.onclick = (e) => { if(e.target.className === 'modal-overlay') closeModal(); }
-</script>
-
+<script src="main.js"></script>
 </body>
 </html>

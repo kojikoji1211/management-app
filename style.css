@@ -59,10 +59,12 @@ h2 {
 }
 
 /* テーブルのデザイン */
+/* テーブルのデザイン */
 table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed; /* 🌟 追加：表の幅を固定する */
 }
 
 th {
@@ -77,6 +79,11 @@ th {
 td {
     padding: 15px;
     border-bottom: 1px solid #eee;
+    
+    /* 🌟 追加：ここから下の3行が「1行にして『...』をつける」魔法です */
+    white-space: nowrap;      /* 改行を禁止する */
+    overflow: hidden;         /* はみ出た部分を隠す */
+    text-overflow: ellipsis;  /* 隠れた部分を「...」にする */
 }
 
 /* 行にマウスを乗せた時の動き */
@@ -92,4 +99,70 @@ tr:hover td {
 @keyframes slideDown {
     from { transform: translateY(-20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+}
+
+/* モーダル（詳細・編集画面）のベース設定 */
+.modal-overlay {
+    display: none; /* 最初は隠しておく */
+    position: fixed; /* 画面に固定して「浮かせる」魔法 */
+    z-index: 1000; /* 他の要素より一番手前に持ってくる */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 背景を半透明の黒にする */
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: slideDown 0.3s ease-out; /* アニメーション */
+}
+
+/* モーダル内の入力レイアウト */
+.modal-header-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 2fr 2fr; 
+    gap: 15px; 
+    margin-bottom: 20px; 
+    border-bottom: 2px solid #f0f0f0; 
+    padding-bottom: 20px; 
+}
+.input-unit { display: flex; flex-direction: column; gap: 5px; }
+.input-unit label { font-size: 0.85em; color: #666; font-weight: bold; }
+.input-unit input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+
+.modal-body { margin-bottom: 20px; }
+.modal-body label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+.modal-body textarea { 
+    width: 100%; 
+    height: 200px; 
+    padding: 12px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    box-sizing: border-box; 
+    resize: vertical; 
+    font-size: 1em; 
+}
+
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+.save-btn { background: #007bff; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.cancel-btn { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+
+/* 追加：並べ替えドロップダウンのデザイン */
+.sort-box {
+    padding: 12px 15px;
+    border: 1px solid #d1d9e0;
+    border-radius: 6px;
+    outline: none;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    /* 検索バーより少し幅を狭くする */
+    min-width: 180px; 
 }
