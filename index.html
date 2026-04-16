@@ -10,16 +10,21 @@
 <div class="container">
     <h2>👤 ユーザー管理システム</h2>
     
-   <div class="top-bar">
+    <div class="top-bar">
         <button class="add-main-btn" onclick="openModalForAdd()">＋ 新規ユーザー登録</button>
         <input type="text" id="search" class="search-box" placeholder="🔍 名前や場所で検索...">
+        
         <select id="sort-select" class="sort-box">
-            </select>
+            <option value="none">並べ替え: 指定なし</option>
+            <option value="id-asc">ID順 (昇順)</option>
+            <option value="name-asc">名前 (あいうえお順)</option>
+            <option value="place-asc">入所場所順</option>
+        </select>
 
-        <button onclick="exportData()" style="padding:10px; cursor:pointer;">書き出し</button>
-        <button onclick="document.getElementById('import-file').click()" style="padding:10px; cursor:pointer;">読み込み</button>
+        <button onclick="exportData()" style="padding:10px; cursor:pointer; background:#f8f9fa; border:1px solid #ddd; border-radius:4px;">書き出し</button>
+        <button onclick="document.getElementById('import-file').click()" style="padding:10px; cursor:pointer; background:#f8f9fa; border:1px solid #ddd; border-radius:4px;">読み込み</button>
         <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(event)">
-        </div>
+    </div>
 
     <table>
         <thead>
