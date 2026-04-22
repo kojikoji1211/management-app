@@ -2,66 +2,95 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>マイ名簿アプリ</title>
+    <title>介護施設管理システム</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <div class="container">
-    <h2>👤 ユーザー管理システム</h2>
     
-    <div class="top-bar">
-        <button class="add-main-btn" onclick="openModalForAdd()">＋ 新規ユーザー登録</button>
-        <input type="text" id="search" class="search-box" placeholder="🔍 名前や場所で検索...">
+    <div id="facility-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>🏢 施設一覧</h2>
+            <button class="add-main-btn" onclick="addFacility()">＋ 施設を追加</button>
+        </div>
         
-        <select id="sort-select" class="sort-box">
-            <option value="none">並べ替え: 指定なし</option>
-            <option value="id-asc">ID順 (昇順)</option>
-            <option value="name-asc">名前 (あいうえお順)</option>
-            <option value="place-asc">入所場所順</option>
-        </select>
+        <div class="facility-grid" id="facility-list">
+            </div>
+    </div> <div id="resident-view" style="display: none;">
+        
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <button onclick="showFacilityView()" class="back-btn">◀ 施設一覧へ戻る</button>
+            <h2 style="margin: 0;">👥 <span id="current-facility-name">施設名</span> の入居者</h2>
+        </div>
 
-        <button onclick="exportData()" style="padding:10px; cursor:pointer; background:#f8f9fa; border:1px solid #ddd; border-radius:4px;">書き出し</button>
-        <button onclick="document.getElementById('import-file').click()" style="padding:10px; cursor:pointer; background:#f8f9fa; border:1px solid #ddd; border-radius:4px;">読み込み</button>
-        <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(event)">
+        <div class="top-bar">
+            <button class="add-main-btn" onclick="openModalForAdd()">＋ 新規入居者登録</button>
+            <input type="text" id="search" class="search-box" placeholder="🔍 名前や部屋番号で検索...">
+            
+            <select id="sort-select" class="sort-box">
+                <option value="none">並べ替え: 指定なし</option>
+                <option value="id-asc">居室番号順</option>
+                <option value="name-asc">名前 (あいうえお順)</option>
+            </select>
+
+            <button onclick="exportData()" style="padding:10px; cursor:pointer; background:#f8f9fa; border:1px solid #ddd; border-radius:4px;">書き出し</button>
+            <button onclick="document.getElementById('import-file').click()" style="padding:10px; cursor:pointer; background:#f8f9fa; border:1px solid #ddd; border-radius:4px;">読み込み</button>
+            <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(event)">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">居室番号</th>
+                    <th style="width: 20%;">名前</th>
+                    <th style="width: 25%;">生年月日 (年齢)</th>
+                    <th style="width: 20%;">入居日</th>
+                    <th style="width: 20%;">操作 (詳細)</th>
+                </tr>
+            </thead>
+            <tbody id="user-list"></tbody>
+        </table>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 10%;">ID</th>
-                <th style="width: 25%;">名前</th>
-                <th style="width: 25%;">入所場所</th>
-                <th style="width: 25%;">備考</th>
-                <th style="width: 15%;">操作</th>
-            </tr>
-        </thead>
-        <tbody id="user-list"></tbody>
-    </table>
 </div>
 
 <div id="user-modal" class="modal-overlay">
     <div class="modal-content">
-        <h3 id="modal-title" style="margin-top: 0;">詳細情報</h3>
+        <h3 id="modal-title" style="margin-top: 0;">入居者情報の登録</h3>
         
-        <div class="modal-header-grid">
+        <div class="modal-header-grid" style="grid-template-columns: 1fr 1fr;">
+            
             <div class="input-unit">
-                <label>ID</label>
-                <input type="text" id="m-userId" placeholder="001">
+                <label>居室番号</label>
+                <input type="text" id="m-userId" placeholder="例: 101">
             </div>
+            
             <div class="input-unit">
                 <label>名前</label>
-                <input type="text" id="m-userName" placeholder="氏名">
+                <input type="text" id="m-userName" placeholder="例: 介護 太郎">
             </div>
+
             <div class="input-unit">
-                <label>入所場所</label>
-                <input type="text" id="m-userPlace" placeholder="場所">
+                <label>生年月日</label>
+                <input type="date" id="m-userDob">
+            </div>
+
+            <div class="input-unit">
+                <label>入居日</label>
+                <input type="date" id="m-userMoveIn">
+            </div>
+
+            <div class="input-unit" style="grid-column: span 2;">
+                <label>入所場所（施設名）</label>
+                <input type="text" id="m-userPlace" readonly style="background-color: #f0f0f0;">
             </div>
         </div>
 
         <div class="modal-body">
             <label>備考内容</label>
-            <textarea id="m-userInfo" placeholder="詳細な備考を入力してください"></textarea>
+            <textarea id="m-userInfo" placeholder="アレルギーや配慮すべき事項など、詳細な備考を入力してください"></textarea>
         </div>
 
         <div class="modal-footer">
@@ -72,5 +101,12 @@
 </div>
 
 <script src="main.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+<script src="main.js"></script>
+</body>
+</html>
+
 </body>
 </html>
